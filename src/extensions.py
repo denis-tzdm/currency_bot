@@ -143,24 +143,22 @@ class Converter:
 
         if r.status_code != 200:
             api_msg = ''
-            error = r_obj['error'] if 'error' in r_obj.keys() else None
+            error = r_obj.get('error')
             if error:
-                api_msg = error['message'] if 'message' in error.keys() else ''
+                api_msg = error.get('message')
             msg = f'{str(r.status_code)}\n{api_msg}'
             raise APIError(f'Ошибка запроса к API: {msg}{r_obj}')
 
-        if not all(_ in r_obj.keys() for _ in ['success', 'result']):
+        if not all(r_obj.get(_) for _ in ['success', 'result']):
             raise APIError(f'Ошибка получения значения через API\n{r_obj}')
 
-        if r_obj['success']:
-            if self.cache.ready:
-                self.cache_current_rate(r_obj)
-            self.r_amount = r_obj['result']
-        else:
-            raise APIError(f'Ошибка получения значения через API\n{r_obj}')
+        if self.cache.ready:
+            self.cache_current_rate(r_obj)
+
+        self.r_amount = r_obj['result']
 
     def cache_current_rate(self, r_obj: dict) -> None:
-        info = r_obj['info'] if 'info' in r_obj.keys() else None
+        info = r_obj.get('info')
         if info and 'rate' in info.keys():
             try:
                 cache_values = {
